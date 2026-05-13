@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>冯靖悦｜3D / Unity / 虚拟形象协作预览</title>
+  <style>
+    :root {
+      --bg: #d9c7ad;
+      --paper: #eadfcf;
+      --paper-2: #c7b08f;
+      --red: #9a2d18;
+      --red-2: #bd3f24;
+      --ink: #2f2924;
+      --muted: #6d5947;
+      --line: rgba(154, 45, 24, 0.65);
+      --shadow: rgba(64, 42, 25, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--red);
+      font-family: "Noto Serif SC", "Songti SC", "SimSun", "Microsoft YaHei", serif;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .nav {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(234, 223, 207, 0.72);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px var(--shadow);
+      color: var(--red);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .nav a {
+      padding: 6px 12px;
+      border-radius: 999px;
+      transition: 0.2s ease;
+    }
+
+    .nav a:hover { background: rgba(154, 45, 24, 0.12); }
+
+    .section {
+      position: relative;
+      min-height: 100vh;
+      padding: 88px 7vw;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(154, 45, 24, 0.12);
+    }
+
+    .hero {
+      justify-content: center;
+      text-align: center;
+      background:
+        radial-gradient(circle at 18% 28%, rgba(255,255,255,0.23), transparent 24%),
+        linear-gradient(90deg, rgba(255,255,255,0.12), transparent 35%),
+        var(--bg);
+    }
+
+    .label {
+      display: inline-block;
+      margin: 8px;
+      padding: 5px 16px;
+      background: rgba(255,255,255,0.45);
+      color: var(--ink);
+      font-size: clamp(18px, 2vw, 28px);
+      letter-spacing: 0.12em;
+    }
+
+    .hero h1 {
+      margin: 34px 0 28px;
+      font-size: clamp(72px, 15vw, 220px);
+      line-height: 0.92;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .hero .sub {
+      font-size: clamp(18px, 2.2vw, 32px);
+      color: var(--ink);
+      letter-spacing: 0.08em;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      margin-top: 44px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-width: 220px;
+      padding: 18px 28px;
+      border-radius: 0;
+      background: #ad953c;
+      color: #fff7e9;
+      font-size: clamp(20px, 2vw, 32px);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.05);
+      transition: 0.2s ease;
+    }
+
+    .btn.red { background: var(--red-2); }
+    .btn small { display: block; font-size: 14px; color: #16110e; line-height: 1.1; }
+    .btn:hover { transform: translateY(-3px); filter: brightness(1.03); }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.3fr);
+      gap: 7vw;
+      width: 100%;
+      align-items: center;
+    }
+
+    .big-title {
+      font-size: clamp(76px, 11vw, 170px);
+      line-height: 0.98;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .script {
+      font-family: "Brush Script MT", "Segoe Script", cursive;
+      color: #312b2d;
+      font-size: clamp(52px, 7vw, 112px);
+      line-height: 0.7;
+      transform: rotate(-7deg);
+      display: block;
+      margin-bottom: -8px;
+    }
+
+    .info-list { width: 100%; }
+    .info-block {
+      border-top: 2px solid var(--line);
+      padding: 28px 0;
+      color: var(--red);
+    }
+    .info-block:last-child { border-bottom: 2px solid var(--line); }
+    .info-block h2 {
+      margin: 0 0 14px;
+      font-size: clamp(28px, 3vw, 44px);
+      font-weight: 500;
+    }
+    .info-block p,
+    .info-block li {
+      margin: 8px 0;
+      font-size: clamp(18px, 1.7vw, 28px);
+      line-height: 1.55;
+    }
+    .info-block ul { margin: 0; padding-left: 1.1em; }
+
+    .types .big-title { font-size: clamp(52px, 8.8vw, 146px); }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 42px;
+      width: 100%;
+      align-items: start;
+    }
+    .card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display: block;
+      box-shadow: 0 20px 38px var(--shadow);
+    }
+    .card h3 {
+      text-align: center;
+      margin: 26px 0 12px;
+      font-size: clamp(26px, 2.6vw, 42px);
+      font-weight: 500;
+    }
+    .card p {
+      margin: 0 auto;
+      max-width: 420px;
+      color: var(--red);
+      text-align: center;
+      font-size: clamp(17px, 1.6vw, 25px);
+      line-height: 1.55;
+    }
+
+    .project {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.72fr) minmax(460px, 1.45fr);
+      gap: 6vw;
+      align-items: center;
+      width: 100%;
+    }
+    .project-title {
+      font-size: clamp(64px, 9vw, 150px);
+      line-height: 0.95;
+      margin: 0 0 36px;
+    }
+    .project-text {
+      max-width: 560px;
+      font-size: clamp(18px, 1.7vw, 28px);
+      line-height: 1.65;
+      color: var(--red);
+    }
+    .stat {
+      border-top: 2px solid var(--line);
+      padding: 18px 0;
+      margin: 0;
+    }
+    .stat strong {
+      display: block;
+      font-size: clamp(28px, 2.8vw, 46px);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .image-stack {
+      position: relative;
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .image-stack img,
+    .image-stack video {
+      max-width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      box-shadow: 0 24px 42px var(--shadow);
+      background: #111;
+    }
+    .image-stack.wide img,
+    .image-stack.wide video {
+      width: 100%;
+      max-height: none;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      width: 100%;
+      box-shadow: 0 24px 42px var(--shadow);
+      background: #222;
+    }
+    .gallery-grid img {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-box video {
+      width: 100%;
+      max-height: 76vh;
+      background: #111;
+      box-shadow: 0 24px 42px var(--shadow);
+    }
+
+    .heart {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      width: 34px;
+      height: 56px;
+      border: 5px solid var(--red);
+      border-bottom: none;
+      border-radius: 34px 34px 0 0;
+      transform-origin: bottom center;
+    }
+    .heart::before { transform: translate(24px, 10px) rotate(-45deg); }
+    .heart::after { transform: translate(9px, 10px) rotate(45deg); }
+    .heart.h1 { left: 5vw; bottom: 9vh; transform: rotate(-18deg); }
+    .heart.h2 { right: 8vw; top: 14vh; transform: scale(0.7) rotate(12deg); }
+    .heart.h3 { left: 44vw; bottom: 8vh; transform: scale(0.55) rotate(22deg); }
+
+    .tape {
+      position: absolute;
+      width: 220px;
+      height: 42px;
+      background: rgba(211, 180, 119, 0.75);
+      transform: rotate(-3deg);
+      top: 9vh;
+      left: 52%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      mix-blend-mode: multiply;
+    }
+
+    .note {
+      margin-top: 22px;
+      font-size: clamp(16px, 1.35vw, 22px);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .ending {
+      justify-content: center;
+      text-align: center;
+      min-height: 92vh;
+    }
+    .ending h2 {
+      margin: 0 0 24px;
+      font-size: clamp(64px, 10vw, 158px);
+      line-height: 1.05;
+    }
+    .ending p {
+      margin: 0 auto;
+      max-width: 800px;
+      color: var(--red);
+      font-size: clamp(24px, 3vw, 46px);
+      line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+      .nav { max-width: calc(100vw - 24px); overflow-x: auto; justify-content: flex-start; }
+      .section { padding: 80px 22px; min-height: auto; }
+      .hero { min-height: 100vh; }
+      .split, .project { grid-template-columns: 1fr; gap: 36px; }
+      .cards { grid-template-columns: 1fr; gap: 40px; }
+      .project-title, .big-title { word-break: keep-all; }
+      .image-stack { min-height: auto; }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .gallery-grid img { aspect-ratio: 4 / 3; }
+      .button-row { gap: 14px; }
+      .btn { width: 100%; min-width: 0; }
+      .heart { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="#top">首页</a>
+    <a href="#info">信息</a>
+    <a href="#works">作品类型</a>
+    <a href="#lowpoly">低模</a>
+    <a href="#highpoly">高模</a>
+    <a href="#animation">动画</a>
+  </nav>
+
+  <section class="section hero" id="top">
+    <div>
+      <div><span class="label">上海大学</span></div>
+      <div><span class="label">数字媒体艺术｜大二</span></div>
+      <h1>冯靖悦</h1>
+      <p class="sub">3D建模 / 贴图材质 / Unity导入 / 动作测试</p>
+      <div class="button-row">
+        <span class="btn">源文件<small>需要的话我可以整理后发</small></span>
+        <a class="btn red" href="#info">上滑预览</a>
+      </div>
+    </div>
+    <span class="heart h2"></span>
+  </section>
+
+  <section class="section" id="info">
+    <div class="split">
+      <div>
+        <h2 class="big-title">个人<br>信息</h2>
+        <span class="heart h1"></span>
+      </div>
+      <div class="info-list">
+        <div class="info-block">
+          <h2>我目前比较熟的部分</h2>
+          <p>3ds Max：建模、UV、基础骨骼/权重</p>
+          <p>ZBrush：雕刻、模型细化</p>
+          <p>Substance 3D Painter：材质和贴图绘制</p>
+          <p>Unity：模型/动画资产导入，基础展示和测试</p>
+        </div>
+        <div class="info-block">
+          <h2>我正在补的部分</h2>
+          <p>虚拟主播直播软件适配</p>
+          <p>VRM / 表情 / 动捕相关流程</p>
+          <p>更规范的模型交付方式</p>
+        </div>
+        <div class="info-block">
+          <h2>合作意向</h2>
+          <p>为爱发电可，有小任务欢迎找我做，主要是看看我到底能不能帮上忙</p>
+          <p>绝对配合！如果我做不到，会提前说。</p>
+        </div>
+        <div class="info-block">
+          <h2>保密</h2>
+          <p>项目文件、沟通内容和未公开模型不会擅自外传。</p>
+          <p>想放进简历或作品集的情况我会先问。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section types" id="works">
+    <div style="width:100%">
+      <h2 class="big-title">这个网页里的作品类型</h2>
+      <div class="cards">
+        <article class="card">
+          <img src="assets/01.png" alt="低模作品预览" />
+          <h3>低模</h3>
+          <p>从0开始在3ds Max里制作角色模型，包括布线、展UV、贴图和最终展示效果。</p>
+        </article>
+        <article class="card">
+          <img src="assets/02.png" alt="高模作品预览" />
+          <h3>高模</h3>
+          <p>使用ZBrush / Substance 3D Painter处理雕塑模型，重点是材质、质感、贴图通道和最终渲染效果。</p>
+        </article>
+        <article class="card">
+          <img src="assets/03.png" alt="动画作品预览" />
+          <h3>动画</h3>
+          <p>使用3ds Max完成基础骨骼绑定、刷权重和走路循环。部分动画还在继续调整。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="lowpoly">
+    <div class="project">
+      <div>
+        <span class="script">part one</span>
+        <h2 class="project-title">低模</h2>
+        <p class="stat"><strong>低模角色练习</strong>参考《学园偶像大师》花海佑芽进行角色练习。</p>
+        <p class="stat"><strong>多边形数</strong>3513</p>
+        <p class="stat"><strong>顶点数</strong>3943</p>
+        <p class="project-text">这个作品主要是为了练习从0开始做二次元低模角色。流程包括：建模、布线、展UV、手绘贴图、基础展示。</p>
+      </div>
+      <div class="image-stack">
+        <span class="tape"></span>
+        <img src="assets/04.png" alt="低模角色展示" />
+        <span class="heart h3"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">低模<br>网格</h2>
+        <p class="project-text">网格展示，主要看布线、结构和模型拆分。</p>
+        <p class="project-text">老师教的展示方法，不知道是不是我的打光问题有些地方是黑的，需要的话可以在文件里详细看。</p>
+      </div>
+      <div class="image-stack wide">
+        <img src="assets/05.png" alt="低模网格展示" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">UV以及<br>贴图</h2>
+        <p class="project-text">老师说要放的，所以放一下</p>
+        <p class="project-text">包含角色服装、头发、皮肤和装饰部件的贴图绘制。贴图偏手绘风格，因为是用ps画的。</p>
+      </div>
+      <div class="image-stack wide">
+        <img src="assets/06.png" alt="低模UV和贴图" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="image-stack wide" style="width:100%">
+      <img src="assets/07.png" alt="低模角色多角度展示" />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">小物体<br>小场景</h2>
+        <p class="project-text">以防你不知道我也会做</p>
+        <p class="project-text">包含小物件建模、材质、灯光和简单场景渲染。</p>
+      </div>
+      <div class="image-stack wide">
+        <img src="assets/08.png" alt="小物体和小场景作品" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="highpoly">
+    <div class="project">
+      <div>
+        <span class="script">part two</span>
+        <h2 class="project-title">高模</h2>
+        <p class="stat"><strong>使用软件</strong>主要是 Substance 3D Painter</p>
+        <p class="stat"><strong>主要作用</strong>材质和质感的体现</p>
+        <p class="project-text">目前还没有正式尝试和二次元角色结合，但我很想试试：比如在二次元模型上做更明显的材质层次，接近《终末地》那种“角色仍然二次元，但材质更有存在感”的方向。</p>
+      </div>
+      <div class="image-stack">
+        <span class="tape"></span>
+        <img src="assets/09.png" alt="高模材质练习" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">贴图通道<br>展示</h2>
+        <p class="project-text">这个练习更偏材质表现，不是手游资产规范流程。</p>
+        <p class="project-text">UV利用率还有优化空间，但最终效果基本能支撑材质展示。</p>
+      </div>
+      <div class="gallery-grid">
+        <img src="assets/10.png" alt="贴图通道1" />
+        <img src="assets/11.png" alt="贴图通道2" />
+        <img src="assets/12.png" alt="贴图通道3" />
+        <img src="assets/13.png" alt="贴图通道4" />
+        <img src="assets/14.png" alt="贴图通道5" />
+        <img src="assets/15.png" alt="贴图通道6" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">成品<br>效果</h2>
+        <p class="project-text">这个作品的目标是把雕塑重新涂装成“像重新活过来”的感觉。</p>
+        <p class="project-text">脸和手臂做得更光滑，有一点大理石质感；衣服和底座保留较粗糙的旧化痕迹。</p>
+      </div>
+      <div class="image-stack wide">
+        <img src="assets/16.png" alt="高模成品效果" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="animation">
+    <div class="project">
+      <div>
+        <span class="script">part three</span>
+        <h2 class="project-title">动画</h2>
+        <p class="stat"><strong>动画 / 骨骼练习</strong>模型由课程提供，我负责骨骼绑定、刷权重和基础动作测试。</p>
+        <p class="project-text">主要练习：走路循环、跟随运动、弹跳小球等基础动画规律。</p>
+      </div>
+      <div class="image-stack wide" id="preview">
+        <img src="assets/17.png" alt="动画板块主图" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">直拳</h2>
+        <p class="project-text">请看VCR。这里放两个直拳测试视频。</p>
+      </div>
+      <div class="video-box">
+        <video src="assets/01.mp4" controls muted playsinline></video>
+        <video src="assets/02.mp4" controls muted playsinline style="margin-top:24px;"></video>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">走路<br>循环</h2>
+        <p class="project-text">请看VCR。</p>
+      </div>
+      <div class="video-box">
+        <video src="assets/03.mp4" controls muted playsinline></video>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="project">
+      <div>
+        <h2 class="project-title">跟随运动<br>和弹跳球</h2>
+        <p class="project-text">基础动画规律练习。重点是跟随、缓冲、弹性和节奏感。</p>
+        <p class="note">这个视频里画面有一点卡顿，主要是当时电脑C盘空间快满了，录屏和软件同时运行时会掉帧；动作逻辑本身是完整做出来的。</p>
+      </div>
+      <div class="video-box">
+        <video src="assets/04.mp4" controls muted playsinline></video>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="source">
+    <div class="split">
+      <div>
+        <h2 class="big-title">项目<br>文件</h2>
+      </div>
+      <div class="info-list">
+        <div class="info-block">
+          <h2>源文件</h2>
+          <p>需要的话我可以整理后发。</p>
+        </div>
+        <div class="info-block">
+          <h2>可先提供的内容</h2>
+          <p>作品截图、短视频、软件截图、模型/贴图流程说明。</p>
+          <p>如果需要工程文件或源文件，我会先整理命名和目录，避免直接丢一堆乱文件。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section ending">
+    <div>
+      <h2>谢谢您花时间<br>看完！</h2>
+      <p>如果有合适的小需求，<br>我可以先从一个测试件开始配合。</p>
+    </div>
+  </section>
+</body>
+</html>
